@@ -1,8 +1,9 @@
 use std::io::{self, Write};
 
 use rt_one_weekend::{
-    colour::{write_colour, Colour},
+    colour::write_colour,
     ray::Ray,
+    ray_colour,
     vec3::{Point3, Vec3},
 };
 
@@ -13,7 +14,7 @@ fn main() {
 
     // Camera
     const VIEWPORT_HEIGHT: f64 = 2.0;
-    const VIEWPORT_WIDTH: f64 = VIEWPORT_HEIGHT * (IMAGE_WIDTH / IMAGE_HEIGHT) as f64;
+    const VIEWPORT_WIDTH: f64 = VIEWPORT_HEIGHT * IMAGE_WIDTH as f64 / IMAGE_HEIGHT as f64;
     let focal_length: f64 = 1.0;
     let camera_centre = Point3::new(0.0, 0.0, 0.0);
 
@@ -47,10 +48,4 @@ fn main() {
         }
     }
     eprintln!("\nDone.")
-}
-
-fn ray_colour(r: &Ray) -> Colour {
-    let unit_direction = r.direction().unit_vector();
-    let a = 0.5 * (unit_direction.y() + 1.0);
-    (1.0 - a) * Colour::new(1.0, 1.0, 1.0) + a * Colour::new(0.5, 0.7, 1.0)
 }
