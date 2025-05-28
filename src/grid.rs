@@ -4,7 +4,7 @@ pub struct Grid<T, const W: usize, const H: usize> {
 
 impl<T, const W: usize, const H: usize> Grid<T, W, H> {
     pub fn get(&self, x: usize, y: usize) -> &T {
-        &self.array[x][y]
+        &self.array[y][x]
     }
     pub fn size(&self) -> usize {
         W * H
@@ -18,7 +18,7 @@ impl<T, const W: usize, const H: usize> Grid<T, W, H> {
         H
     }
 
-    pub fn set_all<F>(&mut self, setter: F)
+    pub fn set_all_parallel<F>(&mut self, setter: F)
     where
         F: Send + Sync + Fn(usize, usize) -> T,
         T: Send,
@@ -29,5 +29,16 @@ impl<T, const W: usize, const H: usize> Grid<T, W, H> {
                 *item = setter(x, y);
             }
         });
+    }
+}
+
+impl<T, const W: usize, const H: usize> Default for Grid<T, W, H>
+where
+    T: Default + Copy,
+{
+    fn default() -> Self {
+        Self {
+            array: [[Default::default(); W]; H],
+        }
     }
 }

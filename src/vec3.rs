@@ -38,6 +38,12 @@ impl Vec3 {
     pub fn unit_vector(&self) -> Self {
         *self / self.length()
     }
+    pub fn to_colour_array(&self) -> [u8; 3] {
+        let r: u8 = (255.999 * self.x()) as u8;
+        let g: u8 = (255.999 * self.y()) as u8;
+        let b: u8 = (255.999 * self.z()) as u8;
+        [r, g, b]
+    }
 }
 
 impl Display for Vec3 {

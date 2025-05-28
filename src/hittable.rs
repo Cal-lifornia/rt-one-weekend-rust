@@ -25,8 +25,8 @@ impl HitRecord {
     }
 }
 
-pub trait Hittable {
-    fn hit(&self, r: &Ray, ray_t: Interval, rec: &mut HitRecord) -> bool;
+pub trait Hittable: Sync + Send {
+    fn hit(&self, r: &Ray, ray_t: Interval) -> Option<HitRecord>;
 }
 
 #[derive(Default)]
@@ -39,8 +39,8 @@ impl HittableList {
         Default::default()
     }
 
-    pub fn add(&mut self, object: Box<dyn Hittable>) {
-        self.objects.push(object);
+    pub fn add(&mut self, object: impl Hittable + 'static) {
+        self.objects.push(Box::new(object));
     }
 
     pub fn clear(&mut self) {
@@ -49,19 +49,17 @@ impl HittableList {
 }
 
 impl Hittable for HittableList {
-    fn hit(&self, r: &Ray, ray_t: Interval, rec: &mut HitRecord) -> bool {
-        let mut temp_rec = HitRecord::default();
-        let mut hit_anything = false;
+    fn hit(&self, r: &Ray, ray_t: Interval) -> Option<HitRecord> {
+        let mut result: Option<HitRecord> = None;
         let mut closest_so_far = ray_t.max;
 
         for object in &self.objects {
-            if object.hit(r, Interval::new(ray_t.min, closest_so_far), &mut temp_rec) {
-                hit_anything = true;
-                closest_so_far = temp_rec.t;
-                *rec = temp_rec;
-            }
+            if let Some(res) = object.hit(r, Interval::new(ray_t.min, closest_so_far)) {
+                closest_so_far = res.t;
+                result = Some(res);
+            };
         }
 
-        hit_anything
+        result
     }
 }
