@@ -1,10 +1,6 @@
-use colour::Colour;
-use hittable::{HitRecord, Hittable};
-use ray::Ray;
-use util::Interval;
-
 pub mod camera;
 pub mod colour;
+pub mod grid;
 pub mod hittable;
 pub mod ray;
 pub mod sphere;
