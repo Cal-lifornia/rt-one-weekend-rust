@@ -1,9 +1,14 @@
-use std::io::{self, Write};
+use std::{
+    io::{self, Write},
+    rc::Rc,
+};
 
 use rt_one_weekend::{
     colour::write_colour,
+    hittable::HittableList,
     ray::Ray,
     ray_colour,
+    sphere::Sphere,
     vec3::{Point3, Vec3},
 };
 
@@ -11,6 +16,10 @@ fn main() {
     const ASPECT_RATIO: f64 = 16.0 / 9.0;
     const IMAGE_WIDTH: i32 = 400;
     const IMAGE_HEIGHT: i32 = (IMAGE_WIDTH as f64 / ASPECT_RATIO) as i32;
+
+    let mut world = HittableList::new();
+    world.add(Box::new(Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5)));
+    world.add(Box::new(Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0)));
 
     // Camera
     const VIEWPORT_HEIGHT: f64 = 2.0;
@@ -43,7 +52,7 @@ fn main() {
                 pixel00_loc + (i as f64 * pixel_delta_h) + (j as f64 * pixel_delta_v);
             let ray_direction = pixel_centre - camera_centre;
             let ray = Ray::new(camera_centre, ray_direction);
-            let pixel_colour = ray_colour(&ray);
+            let pixel_colour = ray_colour(&ray, &mut world);
             write_colour(&mut io::stdout(), &pixel_colour);
         }
     }
