@@ -25,6 +25,7 @@ fn main() {
     let renderer = Renderer {
         camera: cam,
         filename: "output/output.png".into(),
+        samples: 10,
     };
 
     renderer.render_img(world, colour_at_ray, pixels);

@@ -1,5 +1,8 @@
+use rand::Rng;
+
 use crate::{
     ray::Ray,
+    util::random_real,
     vec3::{Point3, Vec3},
 };
 
@@ -32,9 +35,12 @@ impl Camera {
         self.image_height
     }
     pub fn hit_ray(&self, x: usize, y: usize) -> Ray {
-        let pixel_centre =
-            self.pixel00_loc + (x as f64 * self.pixel_delta_h) + (y as f64 * self.pixel_delta_v);
-        let ray_direction = pixel_centre - self.centre;
+        let offset = sample_square();
+
+        let pixel_sample = self.pixel00_loc
+            + ((x as f64 + offset.x()) * self.pixel_delta_h)
+            + ((y as f64 + offset.y()) * self.pixel_delta_v);
+        let ray_direction = pixel_sample - self.centre;
         Ray::new(self.centre, ray_direction)
     }
     fn initialise(&mut self) {
@@ -57,6 +63,9 @@ impl Camera {
     }
 }
 
+fn sample_square() -> Vec3 {
+    Vec3::new(random_real() - 0.5, random_real() - 0.5, 0.0)
+}
 impl Default for Camera {
     fn default() -> Self {
         Self {

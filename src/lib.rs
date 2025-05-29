@@ -1,5 +1,5 @@
 pub mod camera;
-pub mod colour;
+
 pub mod grid;
 pub mod hittable;
 pub mod ray;

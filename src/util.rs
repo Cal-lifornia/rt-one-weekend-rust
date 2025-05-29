@@ -1,7 +1,13 @@
 pub use std::f64::consts::PI;
 
+use rand::Rng;
+
 pub fn degrees_to_radians(degrees: f64) -> f64 {
     degrees * PI / 180.0
+}
+
+pub fn random_real() -> f64 {
+    rand::rng().random_range(0.0..1.0)
 }
 
 pub struct Interval {
@@ -35,8 +41,15 @@ impl Interval {
     pub fn surrounds(&self, x: f64) -> bool {
         self.min < x && x < self.max
     }
-}
 
+    pub fn clamp(&self, num: f64) -> f64 {
+        match num {
+            num if num < self.min => self.min,
+            num if num > self.max => self.max,
+            _ => num,
+        }
+    }
+}
 impl Default for Interval {
     fn default() -> Self {
         Self {

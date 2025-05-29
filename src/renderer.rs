@@ -1,15 +1,17 @@
 use crate::{
     camera::Camera,
-    colour::Colour,
     grid::Grid,
     hittable::{Hittable, HittableList},
     ray::Ray,
     util::Interval,
+    vec3::{Colour, Vec3},
 };
+use rayon::prelude::*;
 
 pub struct Renderer {
     pub camera: Camera,
     pub filename: String,
+    pub samples: i32,
 }
 
 impl Renderer {
@@ -29,15 +31,21 @@ impl Renderer {
     fn render<F>(
         &self,
         world: HittableList,
-        color_hit_by: F,
+        colour_hit_by: F,
     ) -> impl Send + Sync + Fn(usize, usize) -> [u8; 3]
     where
         F: Sync + Send + Fn(&Ray, &HittableList) -> Colour,
     {
+        let samples = self.samples;
         let camera = self.camera;
         move |x, y| {
-            let ray = camera.hit_ray(x, y);
-            color_hit_by(&ray, &world).to_colour_array()
+            let sample_rays = (0..samples).into_par_iter().map(|_| {
+                let ray = camera.hit_ray(x, y);
+                colour_hit_by(&ray, &world)
+            });
+
+            let avg_color = sample_rays.sum::<Vec3>() * (1.0 / samples as f64);
+            avg_color.to_rgb()
         }
     }
 

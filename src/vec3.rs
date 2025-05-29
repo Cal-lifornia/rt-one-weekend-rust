@@ -1,7 +1,12 @@
 use std::{
     fmt::Display,
+    iter::Sum,
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub},
 };
+
+const RGB_CORRECTION: f64 = 255.9999;
+
+use crate::util::random_real;
 
 #[derive(Clone, Copy, Debug, Default)]
 pub struct Vec3 {
@@ -9,21 +14,22 @@ pub struct Vec3 {
 }
 
 pub type Point3 = Vec3;
+pub type Colour = Vec3;
 
 impl Vec3 {
     pub fn new(x: f64, y: f64, z: f64) -> Self {
         Self { e: [x, y, z] }
     }
 
-    pub fn x(&self) -> f64 {
+    pub const fn x(&self) -> f64 {
         self.e[0]
     }
 
-    pub fn y(&self) -> f64 {
+    pub const fn y(&self) -> f64 {
         self.e[1]
     }
 
-    pub fn z(&self) -> f64 {
+    pub const fn z(&self) -> f64 {
         self.e[2]
     }
 
@@ -38,17 +44,54 @@ impl Vec3 {
     pub fn unit_vector(&self) -> Self {
         *self / self.length()
     }
-    pub fn to_colour_array(&self) -> [u8; 3] {
-        let r: u8 = (255.999 * self.x()) as u8;
-        let g: u8 = (255.999 * self.y()) as u8;
-        let b: u8 = (255.999 * self.z()) as u8;
-        [r, g, b]
+
+    pub fn random() -> Self {
+        Vec3::new(random_real(), random_real(), random_real())
+    }
+}
+
+impl Colour {
+    pub const fn r(&self) -> f64 {
+        self.e[0]
+    }
+
+    pub const fn g(&self) -> f64 {
+        self.e[1]
+    }
+
+    pub const fn b(&self) -> f64 {
+        self.e[2]
+    }
+    pub fn to_rgb(&self) -> [u8; 3] {
+        [
+            (self.r() * RGB_CORRECTION) as u8,
+            (self.g() * RGB_CORRECTION) as u8,
+            (self.b() * RGB_CORRECTION) as u8,
+        ]
+    }
+    pub fn to_rgb_gamma_corrected(&self) -> [u8; 3] {
+        [
+            (self.r().sqrt() * RGB_CORRECTION) as u8,
+            (self.g().sqrt() * RGB_CORRECTION) as u8,
+            (self.b().sqrt() * RGB_CORRECTION) as u8,
+        ]
     }
 }
 
 impl Display for Vec3 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{} {} {}", self.e[0], self.e[1], self.e[2])
+    }
+}
+
+impl Sum<Vec3> for Vec3 {
+    fn sum<I: Iterator<Item = Vec3>>(iter: I) -> Self {
+        let mut output = Vec3::new(0.0, 0.0, 0.0);
+        iter.for_each(|v| {
+            output += v;
+        });
+
+        output
     }
 }
 
