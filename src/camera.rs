@@ -1,5 +1,3 @@
-use rand::Rng;
-
 use crate::{
     ray::Ray,
     util::random_real,

@@ -1,5 +1,4 @@
 pub mod camera;
-
 pub mod grid;
 pub mod hittable;
 pub mod ray;

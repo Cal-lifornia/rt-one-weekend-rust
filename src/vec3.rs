@@ -45,8 +45,27 @@ impl Vec3 {
         *self / self.length()
     }
 
-    pub fn random() -> Self {
+    pub fn random_real() -> Self {
         Vec3::new(random_real(), random_real(), random_real())
+    }
+
+    pub fn random_unit_vector() -> Self {
+        loop {
+            let p = Self::random_real();
+            let lensq = p.length_squared();
+            if 1e-160 < lensq && lensq <= 1.0 {
+                return p / lensq.sqrt();
+            }
+        }
+    }
+
+    pub fn random_on_hemisphere(normal: &Vec3) -> Self {
+        let on_unit_sphere = Self::random_unit_vector();
+        if dot(on_unit_sphere, *normal) > 0.0 {
+            on_unit_sphere
+        } else {
+            -on_unit_sphere
+        }
     }
 }
 

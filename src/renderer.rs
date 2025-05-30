@@ -12,18 +12,19 @@ pub struct Renderer {
     pub camera: Camera,
     pub filename: String,
     pub samples: i32,
+    pub max_depth: i32,
 }
 
 impl Renderer {
     pub fn render_img<F, const W: usize, const H: usize>(
         &self,
         world: HittableList,
-        color_hit_by: F,
+        colour_hit_by: F,
         mut pixels: Grid<[u8; 3], W, H>,
     ) where
-        F: Sync + Send + Fn(&Ray, &HittableList) -> Colour,
+        F: Sync + Send + Fn(&Ray, i32, &HittableList) -> Colour,
     {
-        let render_fn = self.render(world, color_hit_by);
+        let render_fn = self.render(world, colour_hit_by);
         pixels.set_all_parallel(render_fn);
         self.output_img(pixels);
     }
@@ -34,14 +35,15 @@ impl Renderer {
         colour_hit_by: F,
     ) -> impl Send + Sync + Fn(usize, usize) -> [u8; 3]
     where
-        F: Sync + Send + Fn(&Ray, &HittableList) -> Colour,
+        F: Sync + Send + Fn(&Ray, i32, &HittableList) -> Colour,
     {
         let samples = self.samples;
         let camera = self.camera;
+        let depth = self.max_depth;
         move |x, y| {
             let sample_rays = (0..samples).into_par_iter().map(|_| {
                 let ray = camera.hit_ray(x, y);
-                colour_hit_by(&ray, &world)
+                colour_hit_by(&ray, depth, &world)
             });
 
             let avg_color = sample_rays.sum::<Vec3>() * (1.0 / samples as f64);
@@ -59,9 +61,13 @@ impl Renderer {
         img_buf.save(&self.filename).unwrap();
     }
 }
-pub fn colour_at_ray(r: &Ray, world: &impl Hittable) -> Colour {
-    if let Some(hit) = world.hit(r, Interval::new(0.0, f64::INFINITY)) {
-        return 0.5 * (hit.normal + Colour::new(1.0, 1.0, 1.0));
+pub fn colour_at_ray(r: &Ray, depth: i32, world: &impl Hittable) -> Colour {
+    if depth <= 0 {
+        return Colour::new(0.0, 0.0, 0.0);
+    }
+    if let Some(hit) = world.hit(r, Interval::new(0.001, f64::INFINITY)) {
+        let direction = Vec3::random_on_hemisphere(&hit.normal);
+        return 0.5 * colour_at_ray(&Ray::new(hit.p, direction), depth - 1, world);
     }
 
     let unit_direction = r.direction().unit_vector();
