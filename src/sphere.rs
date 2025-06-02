@@ -4,7 +4,7 @@ use crate::{
     vec3::{dot, Point3, Vec3},
 };
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct Sphere {
     centre: Point3,
     radius: f64,

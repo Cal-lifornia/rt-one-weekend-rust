@@ -1,10 +1,12 @@
+use std::fmt::Debug;
+
 use crate::{
     ray::Ray,
     util::Interval,
     vec3::{dot, Point3, Vec3},
 };
 
-#[derive(Default, Clone, Copy)]
+#[derive(Default, Clone, Copy, Debug)]
 pub struct HitRecord {
     pub p: Point3,
     pub normal: Vec3,
@@ -25,11 +27,11 @@ impl HitRecord {
     }
 }
 
-pub trait Hittable: Sync + Send {
+pub trait Hittable: Sync + Send + Debug {
     fn hit(&self, r: &Ray, ray_t: Interval) -> Option<HitRecord>;
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct HittableList {
     pub objects: Vec<Box<dyn Hittable>>,
 }

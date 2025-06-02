@@ -1,10 +1,12 @@
+use tracing::instrument;
+
 use crate::{
     ray::Ray,
     util::random_real,
     vec3::{Point3, Vec3},
 };
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct Camera {
     pub aspect_ratio: f64,
     pub image_width: i32,
