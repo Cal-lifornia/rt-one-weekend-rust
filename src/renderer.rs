@@ -9,7 +9,7 @@ use crate::{
     vec3::{Colour, Vec3},
 };
 use rayon::prelude::*;
-use tracing::{debug, info, instrument, span, Level};
+use tracing::info;
 use tracing_indicatif::{span_ext::IndicatifSpanExt, style::ProgressStyle};
 
 #[derive(Debug)]
@@ -56,15 +56,16 @@ impl Renderer {
         }
     }
 
-    #[instrument(skip_all)]
     fn output_img<const W: usize, const H: usize>(&self, pixels: Grid<[u8; 3], W, H>) {
         info!("beginning image write");
 
         let mut img_buf = image::ImageBuffer::new(pixels.width() as u32, pixels.height() as u32);
+
         let span_header = tracing::info_span!("writing image");
         span_header.pb_set_style(&ProgressStyle::default_bar());
         span_header.pb_set_length((pixels.width() * pixels.height()) as u64);
         let span_header_entered = span_header.enter();
+
         for (x, y, pixel) in img_buf.enumerate_pixels_mut() {
             let colour = pixels.get(x as usize, y as usize);
             *pixel = image::Rgb(*colour);

@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-use tracing::{info_span, Span};
+use tracing::Span;
 use tracing_indicatif::{span_ext::IndicatifSpanExt, style::ProgressStyle};
 
 #[derive(Debug)]
@@ -31,7 +31,7 @@ impl<T, const W: usize, const H: usize> Grid<T, W, H> {
     {
         use rayon::prelude::*;
 
-        let span_header = tracing::info_span!("writing pixels");
+        let span_header = tracing::info_span!("writing pixels to the grid");
         span_header.pb_set_style(&ProgressStyle::default_bar());
         span_header.pb_set_length((self.width() * self.height()) as u64);
         let span_header_entered = span_header.enter();

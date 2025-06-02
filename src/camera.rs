@@ -1,5 +1,3 @@
-use tracing::instrument;
-
 use crate::{
     ray::Ray,
     util::random_real,

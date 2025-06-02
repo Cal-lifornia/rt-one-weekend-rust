@@ -78,17 +78,18 @@ impl<S> Filter<S> for DebugOnlyFilter {
     fn enabled(
         &self,
         meta: &tracing::Metadata<'_>,
-        cx: &tracing_subscriber::layer::Context<'_, S>,
+        #[allow(unused_variables)] cx: &tracing_subscriber::layer::Context<'_, S>,
     ) -> bool {
         meta.level() == &Level::DEBUG
     }
 }
+#[allow(unused_variables)]
 struct ErrorOnlyFilter;
 impl<S> Filter<S> for ErrorOnlyFilter {
     fn enabled(
         &self,
         meta: &tracing::Metadata<'_>,
-        cx: &tracing_subscriber::layer::Context<'_, S>,
+        #[allow(unused_variables)] cx: &tracing_subscriber::layer::Context<'_, S>,
     ) -> bool {
         meta.level() == &Level::ERROR
     }
