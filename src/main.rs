@@ -1,4 +1,4 @@
-use std::{fs::OpenOptions, sync::Arc};
+use std::{f64::consts::PI, fs::OpenOptions, sync::Arc};
 
 use rt_one_weekend::{
     camera::Camera,
@@ -7,7 +7,7 @@ use rt_one_weekend::{
     material::{Dielectric, Lambertian, Metal},
     renderer::{ray_colour, Renderer},
     sphere::Sphere,
-    vec3::{Colour, Point3},
+    vec3::{Colour, Point3, Vec3},
 };
 use tracing::{level_filters::LevelFilter, Level};
 use tracing_indicatif::IndicatifLayer;
@@ -20,6 +20,7 @@ fn main() {
     const ASPECT_RATIO: f64 = 16.0 / 9.0;
     const IMAGE_WIDTH: i32 = 500;
     const IMAGE_HEIGHT: i32 = (IMAGE_WIDTH as f64 / ASPECT_RATIO) as i32;
+    const FOV: f64 = 20.0;
     const HEIGHT: usize = IMAGE_HEIGHT as usize;
     const WIDTH: usize = IMAGE_WIDTH as usize;
 
@@ -57,6 +58,7 @@ fn main() {
     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
 
     let mut world = HittableList::new();
+
     // Ground
     world.add(Sphere::new(
         Point3::new(0.0, -100.5, -1.0),
@@ -91,14 +93,22 @@ fn main() {
         Some(Arc::new(Metal::new(Colour::new(0.8, 0.6, 0.2), 1.0))),
     ));
 
-    let cam = Camera::new(ASPECT_RATIO, IMAGE_WIDTH, IMAGE_HEIGHT);
+    let cam = Camera::new(
+        ASPECT_RATIO,
+        IMAGE_WIDTH,
+        IMAGE_HEIGHT,
+        FOV,
+        Point3::new(-2.0, 2.0, 1.0),
+        Point3::new(0.0, 0.0, -1.0),
+        Vec3::new(0.0, 1.0, 0.0),
+    );
 
     let pixels: Grid<[u8; 3], WIDTH, HEIGHT> = Default::default();
 
     let renderer = Renderer {
         camera: cam,
         filename: "output/output.png".into(),
-        samples: 30,
+        samples: 50,
         max_depth: 30,
     };
 
