@@ -846,6 +846,7 @@ checksum = "57397d16646700483b67d2dd6511d79318f9d057fdbd21a4066aeac8b41d310a"
 name = "rt-one-weekend"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "image",
  "rand 0.9.1",
  "rayon",
