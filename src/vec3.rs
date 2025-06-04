@@ -45,6 +45,11 @@ impl Vec3 {
         *self / self.length()
     }
 
+    pub fn near_zero(&self) -> bool {
+        let s = 1e-8;
+        self.e[0].abs() < s && self.e[1].abs() < s && self.e[2].abs() < s
+    }
+
     pub fn random_real() -> Self {
         Vec3::new(random_real(), random_real(), random_real())
     }
@@ -61,11 +66,22 @@ impl Vec3 {
 
     pub fn random_on_hemisphere(normal: &Vec3) -> Self {
         let on_unit_sphere = Self::random_unit_vector();
-        if dot(on_unit_sphere, *normal) > 0.0 {
+        if dot(&on_unit_sphere, normal) > 0.0 {
             on_unit_sphere
         } else {
             -on_unit_sphere
         }
+    }
+    pub fn reflect(&self, n: &Vec3) -> Self {
+        *self - 2.0 * dot(self, n) * *n
+    }
+
+    pub fn refract(&self, n: &Vec3, etai_over_etat: f64) -> Self {
+        let cos_theta = dot(&self.neg(), n).min(1.0);
+        let r_out_perp = etai_over_etat * (*self + cos_theta * *n);
+        let abs = (1.0 + r_out_perp.length_squared()).abs().sqrt();
+        let r_out_parallel = -abs * *n;
+        r_out_perp + r_out_parallel
     }
 }
 
@@ -189,7 +205,7 @@ impl Div<Vec3> for f64 {
     }
 }
 
-pub fn dot(u: Vec3, v: Vec3) -> f64 {
+pub fn dot(u: &Vec3, v: &Vec3) -> f64 {
     u.x() * v.x() + u.y() * v.y() + u.z() * v.z()
 }
 

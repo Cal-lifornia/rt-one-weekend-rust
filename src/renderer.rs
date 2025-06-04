@@ -24,12 +24,12 @@ impl Renderer {
     pub fn render_img<F, const W: usize, const H: usize>(
         &self,
         world: HittableList,
-        colour_hit_by: F,
+        ray_colour: F,
         mut pixels: Grid<[u8; 3], W, H>,
     ) where
         F: Sync + Send + Fn(&Ray, i32, &HittableList) -> Colour,
     {
-        let render_fn = self.render(world, colour_hit_by);
+        let render_fn = self.render(world, ray_colour);
         pixels.set_all_parallel(render_fn);
         self.output_img(pixels);
     }
@@ -37,7 +37,7 @@ impl Renderer {
     fn render<F>(
         &self,
         world: HittableList,
-        colour_hit_by: F,
+        ray_colour: F,
     ) -> impl Send + Sync + Fn(usize, usize) -> [u8; 3]
     where
         F: Sync + Send + Fn(&Ray, i32, &HittableList) -> Colour,
@@ -48,11 +48,11 @@ impl Renderer {
         move |x, y| {
             let sample_rays = (0..samples).into_par_iter().map(|_| {
                 let ray = camera.hit_ray(x, y);
-                colour_hit_by(&ray, depth, &world)
+                ray_colour(&ray, depth, &world)
             });
 
             let avg_color = sample_rays.sum::<Vec3>() * (1.0 / samples as f64);
-            avg_color.to_rgb()
+            avg_color.to_rgb_gamma_corrected()
         }
     }
 
@@ -77,13 +77,17 @@ impl Renderer {
         std::mem::drop(span_header);
     }
 }
-pub fn colour_at_ray(r: &Ray, depth: i32, world: &impl Hittable) -> Colour {
+pub fn ray_colour(r: &Ray, depth: i32, world: &impl Hittable) -> Colour {
     if depth <= 0 {
         return Colour::new(0.0, 0.0, 0.0);
     }
     if let Some(hit) = world.hit(r, Interval::new(0.001, f64::INFINITY)) {
-        let direction = Vec3::random_on_hemisphere(&hit.normal);
-        return 0.5 * colour_at_ray(&Ray::new(hit.p, direction), depth - 1, world);
+        if let Some(material) = hit.material.clone() {
+            if let Some((scattered, attenuation)) = material.scatter(r, &hit) {
+                return attenuation * ray_colour(&scattered, depth - 1, world);
+            }
+        }
+        return Colour::new(0.0, 0.0, 0.0);
     }
 
     let unit_direction = r.direction().unit_vector();

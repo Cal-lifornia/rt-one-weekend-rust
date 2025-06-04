@@ -1,28 +1,30 @@
-use std::fmt::Debug;
+use std::{fmt::Debug, ops::Neg, sync::Arc};
 
 use crate::{
+    material::Material,
     ray::Ray,
     util::Interval,
     vec3::{dot, Point3, Vec3},
 };
 
-#[derive(Default, Clone, Copy, Debug)]
+#[derive(Default, Clone, Debug)]
 pub struct HitRecord {
     pub p: Point3,
     pub normal: Vec3,
     pub t: f64,
     pub front_face: bool,
+    pub material: Option<Arc<dyn Material>>,
 }
 
 impl HitRecord {
     /// Sets the HitRecord normal vector.
     /// NOTE: The parameter 'outward_normal' is assumed to have unit length.
     pub fn set_face_normal(&mut self, r: &Ray, outward_normal: &Vec3) {
-        self.front_face = dot(r.direction(), *outward_normal) < 0.0;
+        self.front_face = dot(&r.direction(), outward_normal) < 0.0;
         self.normal = if self.front_face {
             *outward_normal
         } else {
-            -*outward_normal
+            outward_normal.neg()
         }
     }
 }

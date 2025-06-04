@@ -1,6 +1,8 @@
 pub mod camera;
 pub mod grid;
 pub mod hittable;
+pub mod macros;
+pub mod material;
 pub mod ray;
 pub mod renderer;
 pub mod sphere;
