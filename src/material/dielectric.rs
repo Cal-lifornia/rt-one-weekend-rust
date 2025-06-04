@@ -21,7 +21,7 @@ impl Dielectric {
     fn reflectance(&self, cosine: f64, refraction_index: f64) -> f64 {
         let mut r0 = (1.0 - refraction_index) / (1.0 + refraction_index);
         r0 = r0 * r0;
-        r0 + (1.0 - r0) * (1.0 - cosine).powi(5)
+        r0 + (1.0 - r0) * (1.0 - cosine).powf(5.0)
     }
 }
 
@@ -41,6 +41,7 @@ impl Material for Dielectric {
 
         let cannot_refract = ri * sin_theta > 1.0;
 
+        // || self.reflectance(cos_theta, ri) > random_real()
         let direction = if cannot_refract || self.reflectance(cos_theta, ri) > random_real() {
             unit_direction.reflect(&hit_rec.normal)
         } else {

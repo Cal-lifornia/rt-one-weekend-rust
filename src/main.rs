@@ -18,7 +18,7 @@ use tracing_subscriber::{
 
 fn main() {
     const ASPECT_RATIO: f64 = 16.0 / 9.0;
-    const IMAGE_WIDTH: i32 = 300;
+    const IMAGE_WIDTH: i32 = 500;
     const IMAGE_HEIGHT: i32 = (IMAGE_WIDTH as f64 / ASPECT_RATIO) as i32;
     const HEIGHT: usize = IMAGE_HEIGHT as usize;
     const WIDTH: usize = IMAGE_WIDTH as usize;
