@@ -1,12 +1,11 @@
 use std::{f64::consts::PI, fs::OpenOptions, sync::Arc};
 
 use rt_one_weekend::{
-    camera::Camera,
+    camera::{Camera, CameraOptions},
     grid::Grid,
-    hittable::HittableList,
+    hittable::{HittableList, Sphere},
     material::{Dielectric, Lambertian, Metal},
     renderer::{ray_colour, Renderer},
-    sphere::Sphere,
     vec3::{Colour, Point3, Vec3},
 };
 use tracing::{level_filters::LevelFilter, Level};
@@ -93,23 +92,25 @@ fn main() {
         Some(Arc::new(Metal::new(Colour::new(0.8, 0.6, 0.2), 1.0))),
     ));
 
-    let cam = Camera::new(
-        ASPECT_RATIO,
-        IMAGE_WIDTH,
-        IMAGE_HEIGHT,
-        FOV,
-        Point3::new(-2.0, 2.0, 1.0),
-        Point3::new(0.0, 0.0, -1.0),
-        Vec3::new(0.0, 1.0, 0.0),
-    );
+    let cam = Camera::new(&CameraOptions {
+        aspect_ratio: ASPECT_RATIO,
+        image_width: IMAGE_WIDTH,
+        image_height: IMAGE_HEIGHT,
+        v_fov: FOV,
+        look_from: Point3::new(-2.0, 2.0, 1.0),
+        look_at: Point3::new(0.0, 0.0, -1.0),
+        v_up: Vec3::new(0.0, 1.0, 0.0),
+        defocus_angle: 10.0,
+        focus_dist: 3.4,
+    });
 
     let pixels: Grid<[u8; 3], WIDTH, HEIGHT> = Default::default();
 
     let renderer = Renderer {
         camera: cam,
         filename: "output/output.png".into(),
-        samples: 50,
-        max_depth: 30,
+        samples: 100,
+        max_depth: 50,
     };
 
     renderer.render_img(world, ray_colour, pixels);

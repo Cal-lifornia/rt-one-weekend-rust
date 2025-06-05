@@ -6,6 +6,8 @@ use std::{
 
 const RGB_CORRECTION: f64 = 255.9999;
 
+use rand::Rng;
+
 use crate::util::random_real;
 
 #[derive(Clone, Copy, Debug, Default)]
@@ -72,6 +74,20 @@ impl Point3 {
             -on_unit_sphere
         }
     }
+
+    pub fn random_in_unit_disk() -> Self {
+        loop {
+            let p = Vec3::new(
+                rand::rng().random_range(-1.0..=1.0),
+                rand::rng().random_range(-1.0..=1.0),
+                0.0,
+            );
+            if p.length_squared() < 1.0 {
+                return p;
+            }
+        }
+    }
+
     pub fn reflect(&self, n: &Point3) -> Self {
         *self - 2.0 * dot(self, n) * *n
     }
