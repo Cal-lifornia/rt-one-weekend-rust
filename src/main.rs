@@ -1,11 +1,13 @@
 use std::{f64::consts::PI, fs::OpenOptions, sync::Arc};
 
+use rand::Rng;
 use rt_one_weekend::{
     camera::{Camera, CameraOptions},
     grid::Grid,
     hittable::{HittableList, Sphere},
     material::{Dielectric, Lambertian, Metal},
     renderer::{ray_colour, Renderer},
+    util::random_real,
     vec3::{Colour, Point3, Vec3},
 };
 use tracing::{level_filters::LevelFilter, Level};
@@ -17,7 +19,7 @@ use tracing_subscriber::{
 
 fn main() {
     const ASPECT_RATIO: f64 = 16.0 / 9.0;
-    const IMAGE_WIDTH: i32 = 500;
+    const IMAGE_WIDTH: i32 = 1200;
     const IMAGE_HEIGHT: i32 = (IMAGE_WIDTH as f64 / ASPECT_RATIO) as i32;
     const FOV: f64 = 20.0;
     const HEIGHT: usize = IMAGE_HEIGHT as usize;
@@ -58,38 +60,57 @@ fn main() {
 
     let mut world = HittableList::new();
 
-    // Ground
+    let ground_material = Arc::new(Lambertian::new(Colour::new(0.5, 0.5, 0.5)));
     world.add(Sphere::new(
-        Point3::new(0.0, -100.5, -1.0),
-        100.0,
-        Some(Arc::new(Lambertian::new(Colour::new(0.8, 0.8, 0.0)))),
-    ));
-    // Centre
-    world.add(Sphere::new(
-        Point3::new(0.0, 0.0, -1.2),
-        0.5,
-        Some(Arc::new(Lambertian::new(Colour::new(0.1, 0.2, 0.5)))),
+        Point3::new(0.0, -1000.0, 0.0),
+        1000.0,
+        Some(ground_material),
     ));
 
-    // Left
-    world.add(Sphere::new(
-        Point3::new(-1.0, 0.0, -1.0),
-        0.5,
-        Some(Arc::new(Dielectric::new(1.50))),
-    ));
+    for a in -11..11 {
+        for b in -11..11 {
+            let choose_mat = random_real();
+            let centre = Point3::new(
+                a as f64 + 0.9 + random_real(),
+                0.2,
+                b as f64 + 0.9 * random_real(),
+            );
+            if (centre - Point3::new(4.0, 0.2, 0.0)).length() > 0.9 {
+                if choose_mat < 0.0 {
+                    let albedo = Colour::random_real() * Colour::random_real();
+                    let material = Arc::new(Lambertian::new(albedo));
+                    world.add(Sphere::new(centre, 0.2, Some(material)));
+                } else if choose_mat < 0.95 {
+                    let albedo = Colour::new(
+                        rand::rng().random_range(0.5..=1.0),
+                        rand::rng().random_range(0.5..=1.0),
+                        rand::rng().random_range(0.5..=1.0),
+                    );
+                    let fuzz = rand::rng().random_range(0.0..=0.5);
+                    let material = Arc::new(Metal::new(albedo, fuzz));
+                    world.add(Sphere::new(centre, 0.2, Some(material)));
+                } else {
+                    let material = Arc::new(Dielectric::new(1.5));
+                    world.add(Sphere::new(centre, 0.2, Some(material)));
+                };
+            }
+        }
+    }
 
-    // Bubble
     world.add(Sphere::new(
-        Point3::new(-1.0, 0.0, -1.0),
-        0.4,
-        Some(Arc::new(Dielectric::new(1.00 / 1.50))),
+        Point3::new(0.0, 1.0, 0.0),
+        1.0,
+        Some(Arc::new(Dielectric::new(1.5))),
     ));
-
-    // Right
     world.add(Sphere::new(
-        Point3::new(1.0, 0.0, -1.0),
-        0.5,
-        Some(Arc::new(Metal::new(Colour::new(0.8, 0.6, 0.2), 1.0))),
+        Point3::new(-4.0, 1.0, 0.0),
+        1.0,
+        Some(Arc::new(Lambertian::new(Colour::new(0.4, 0.2, 0.1)))),
+    ));
+    world.add(Sphere::new(
+        Point3::new(4.0, 1.0, 0.0),
+        1.0,
+        Some(Arc::new(Metal::new(Colour::new(0.7, 0.6, 0.5), 0.0))),
     ));
 
     let cam = Camera::new(&CameraOptions {
@@ -97,11 +118,11 @@ fn main() {
         image_width: IMAGE_WIDTH,
         image_height: IMAGE_HEIGHT,
         v_fov: FOV,
-        look_from: Point3::new(-2.0, 2.0, 1.0),
-        look_at: Point3::new(0.0, 0.0, -1.0),
+        look_from: Point3::new(13.0, 2.0, 3.0),
+        look_at: Point3::new(0.0, 0.0, 0.0),
         v_up: Vec3::new(0.0, 1.0, 0.0),
-        defocus_angle: 10.0,
-        focus_dist: 3.4,
+        defocus_angle: 0.6,
+        focus_dist: 10.0,
     });
 
     let pixels: Grid<[u8; 3], WIDTH, HEIGHT> = Default::default();
@@ -109,7 +130,7 @@ fn main() {
     let renderer = Renderer {
         camera: cam,
         filename: "output/output.png".into(),
-        samples: 100,
+        samples: 500,
         max_depth: 50,
     };
 
