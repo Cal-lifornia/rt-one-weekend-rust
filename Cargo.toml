@@ -5,6 +5,9 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[profile.bench]
+debug = true
+
 [dependencies]
 rayon = "1.10.0"
 rand = "0.9.1"
@@ -13,3 +16,12 @@ tracing = "0.1"
 tracing-subscriber = "0.3.0"
 tracing-indicatif = "0.3.9"
 anyhow = "1.0.98"
+criterion = { version = "0.5", features = ["html_reports"] }
+
+[features]
+benchmark = []
+software_render = []
+
+[[bench]]
+name = "render"
+harness = false

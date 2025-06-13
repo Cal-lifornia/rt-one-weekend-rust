@@ -31,6 +31,8 @@ impl Renderer {
     {
         let render_fn = self.render(world, ray_colour);
         pixels.set_all_parallel(render_fn);
+        // If benchmarking we don't need to render the image out
+        #[cfg(not(feature = "benchmark"))]
         self.output_img(pixels);
     }
 
@@ -56,6 +58,7 @@ impl Renderer {
         }
     }
 
+    #[cfg(not(feature = "benchmark"))]
     fn output_img<const W: usize, const H: usize>(&self, pixels: Grid<[u8; 3], W, H>) {
         info!("beginning image write");
 
