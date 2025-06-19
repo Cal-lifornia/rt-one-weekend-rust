@@ -1,4 +1,4 @@
-use std::{f64::consts::PI, fs::OpenOptions, sync::Arc};
+use std::{fs::OpenOptions, sync::Arc};
 
 use rand::Rng;
 use rt_one_weekend::{
@@ -18,13 +18,6 @@ use tracing_subscriber::{
 };
 
 fn main() {
-    const ASPECT_RATIO: f64 = 16.0 / 9.0;
-    const IMAGE_WIDTH: i32 = 1200;
-    const IMAGE_HEIGHT: i32 = (IMAGE_WIDTH as f64 / ASPECT_RATIO) as i32;
-    const FOV: f64 = 20.0;
-    const HEIGHT: usize = IMAGE_HEIGHT as usize;
-    const WIDTH: usize = IMAGE_WIDTH as usize;
-
     let err_file = OpenOptions::new()
         .append(true)
         .create(true)
@@ -57,6 +50,24 @@ fn main() {
                 .with_filter(ErrorOnlyFilter),
         );
     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+
+    #[cfg(feature = "software_render")]
+    software_render();
+
+    #[cfg(feature = "gpu_render")]
+    match rt_one_weekend::state::run() {
+        Ok(_) => {}
+        Err(e) => tracing::error!("ran into error {}", e),
+    }
+}
+
+fn software_render() {
+    const ASPECT_RATIO: f64 = 16.0 / 9.0;
+    const IMAGE_WIDTH: i32 = 1200;
+    const IMAGE_HEIGHT: i32 = (IMAGE_WIDTH as f64 / ASPECT_RATIO) as i32;
+    const FOV: f64 = 20.0;
+    const HEIGHT: usize = IMAGE_HEIGHT as usize;
+    const WIDTH: usize = IMAGE_WIDTH as usize;
 
     let mut world = HittableList::new();
 
@@ -142,7 +153,7 @@ impl<S> Filter<S> for DebugOnlyFilter {
     fn enabled(
         &self,
         meta: &tracing::Metadata<'_>,
-        #[allow(unused_variables)] cx: &tracing_subscriber::layer::Context<'_, S>,
+        _cx: &tracing_subscriber::layer::Context<'_, S>,
     ) -> bool {
         meta.level() == &Level::DEBUG
     }
@@ -153,7 +164,7 @@ impl<S> Filter<S> for ErrorOnlyFilter {
     fn enabled(
         &self,
         meta: &tracing::Metadata<'_>,
-        #[allow(unused_variables)] cx: &tracing_subscriber::layer::Context<'_, S>,
+        _cx: &tracing_subscriber::layer::Context<'_, S>,
     ) -> bool {
         meta.level() == &Level::ERROR
     }

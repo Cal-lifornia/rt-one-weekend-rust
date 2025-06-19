@@ -56,7 +56,8 @@
         { pkgs }:
         {
           default = pkgs.mkShell {
-            packages = with pkgs; [
+            buildInputs = with pkgs; [ wayland ];
+            packages = with pkgs; ([
               rustToolchain
               openssl
               pkg-config
@@ -66,7 +67,9 @@
               rust-analyzer
               cargo-flamegraph
               gnuplot
-            ];
+              wgsl-analyzer
+
+            ]);
 
             env = {
               # Required by rust-analyzer

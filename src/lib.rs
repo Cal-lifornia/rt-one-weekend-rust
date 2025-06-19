@@ -6,5 +6,6 @@ pub mod material;
 pub mod obj;
 pub mod ray;
 pub mod renderer;
+pub mod state;
 pub mod util;
 pub mod vec3;
