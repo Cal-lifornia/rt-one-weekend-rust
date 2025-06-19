@@ -1,80 +1,83 @@
 {
-  description = "A Nix-flake-based Rust development environment";
+  description = "Bevy Game Engine - Rust Lang";
 
   inputs = {
-    nixpkgs.url = "https://flakehub.com/f/NixOS/nixpkgs/0.1";
-    rust-overlay = {
-      url = "github:oxalica/rust-overlay";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    fenix = {
+      url = "github:nix-community/fenix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
   outputs =
-    inputs:
+    {
+      nixpkgs,
+      fenix,
+      ...
+    }:
     let
-      supportedSystems = [
+      systems = [
         "x86_64-linux"
         "aarch64-linux"
         "x86_64-darwin"
         "aarch64-darwin"
       ];
-      forEachSupportedSystem =
-        f:
-        inputs.nixpkgs.lib.genAttrs supportedSystems (
-          system:
-          f {
-            pkgs = import inputs.nixpkgs {
-              inherit system;
-              overlays = [
-                inputs.rust-overlay.overlays.default
-                inputs.self.overlays.default
-              ];
-            };
-          }
-        );
+      # Helper function to generate a set of attributes for each system
+      forAllSystems = func: (nixpkgs.lib.genAttrs systems func);
     in
     {
-      overlays.default = final: prev: {
-        rustToolchain =
-          let
-            rust = prev.rust-bin;
-          in
-          if builtins.pathExists ./rust-toolchain.toml then
-            rust.fromRustupToolchainFile ./rust-toolchain.toml
-          else if builtins.pathExists ./rust-toolchain then
-            rust.fromRustupToolchainFile ./rust-toolchain
-          else
-            rust.stable.latest.default.override {
-              extensions = [
-                "rust-src"
-                "rustfmt"
-              ];
-            };
-      };
-
-      devShells = forEachSupportedSystem (
-        { pkgs }:
+      devShells = forAllSystems (
+        system:
+        let
+          pkgs = import nixpkgs {
+            inherit system;
+            overlays = [ fenix.overlays.default ];
+          };
+          lib = pkgs.lib;
+        in
         {
-          default = pkgs.mkShell {
-            buildInputs = with pkgs; [ wayland ];
-            packages = with pkgs; ([
-              rustToolchain
-              openssl
+          default = pkgs.mkShell rec {
+            nativeBuildInputs = with pkgs; [
               pkg-config
-              cargo-deny
-              cargo-edit
-              cargo-watch
-              rust-analyzer
-              cargo-flamegraph
-              gnuplot
-              wgsl-analyzer
-
-            ]);
-
-            env = {
-              # Required by rust-analyzer
-              RUST_SRC_PATH = "${pkgs.rustToolchain}/lib/rustlib/src/rust/library";
-            };
+              clang
+              # lld is much faster at linking than the default Rust linker
+              lld
+            ];
+            buildInputs =
+              with pkgs;
+              [
+                # rust toolchain
+                (pkgs.fenix.complete.withComponents [
+                  "cargo"
+                  "clippy"
+                  "rust-src"
+                  "rustc"
+                  "rustfmt"
+                ])
+                # use rust-analyzer-nightly for better type inference
+                rust-analyzer-nightly
+                cargo-watch
+                cargo-flamegraph
+                gnuplot
+                wgsl-analyzer
+              ]
+              # https://github.com/bevyengine/bevy/blob/v0.14.2/docs/linux_dependencies.md#nix
+              ++ (lib.optionals pkgs.stdenv.isLinux [
+                udev
+                alsa-lib
+                vulkan-loader
+                xorg.libX11
+                xorg.libXcursor
+                xorg.libXi
+                xorg.libXrandr # To use the x11 feature
+                libxkbcommon
+                wayland # To use the wayland feature
+              ])
+              ++ (pkgs.lib.optionals pkgs.stdenv.isDarwin [
+                # https://discourse.nixos.org/t/the-darwin-sdks-have-been-updated/55295/1
+                apple-sdk_15
+              ]);
+            LD_LIBRARY_PATH = lib.makeLibraryPath buildInputs;
           };
         }
       );
