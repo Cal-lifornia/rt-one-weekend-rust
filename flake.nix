@@ -39,7 +39,6 @@
               cargo-watch
               cargo-flamegraph
               gnuplot
-              wgsl-analyzer
             ]
             # https://github.com/bevyengine/bevy/blob/v0.14.2/docs/linux_dependencies.md#nix
             ++ (lib.optionals pkgs.stdenv.isLinux [
